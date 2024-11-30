@@ -5,7 +5,7 @@ A simple and efficient Task Manager application built using React and Mantine. T
 
 ## Deployment
 
-The application is deployed and accessible at [Task Manager App](https://todo-app-jainam-b.vercel.app/).
+The application is deployed and accessible at [Task Manager App](https://.vercel.app/).
 
 ## Features
 
@@ -24,8 +24,8 @@ The application is deployed and accessible at [Task Manager App](https://todo-ap
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/your-username/task-manager-app.git
-   cd task-manager-app
+   git clone https://github.com/Ganesh082900/Todo-App.git
+   cd Todo-App
    ```
 
 2. **Install dependencies:**
@@ -35,7 +35,7 @@ The application is deployed and accessible at [Task Manager App](https://todo-ap
 
 3. **Start the development server:**
    ```sh
-   npm start
+   npm run dev
    ```
 
 ## Usage
@@ -70,10 +70,6 @@ Contributions are welcome! Please follow these steps:
 3. Make your changes and commit them: `git commit -m 'Add new feature'`
 4. Push to the branch: `git push origin my-feature-branch`
 5. Create a pull request.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
