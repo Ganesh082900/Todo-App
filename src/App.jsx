@@ -20,6 +20,7 @@ export default function App() {
   const [editIndex, setEditIndex] = useState(null);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskSummary, setTaskSummary] = useState('');
+  const [titleError, setTitleError] = useState(false);
 
   const preferredColorScheme = useColorScheme();
   const [colorScheme, setColorScheme] = useLocalStorage({
@@ -35,13 +36,24 @@ export default function App() {
   );
 
   const createTask = useCallback(() => {
+    if (!taskTitle.trim()) {
+      setTitleError(true);
+      return;
+    }
     const newTask = { title: taskTitle, summary: taskSummary, completed: false };
-    const updatedTasks = editIndex === null ? [...tasks, newTask] : tasks.map((task, index) => index === editIndex ? newTask : task);
+    const updatedTasks =
+      editIndex === null
+        ? [...tasks, newTask]
+        : tasks.map((task, index) =>
+          index === editIndex ? newTask : task
+        );
     setTasks(updatedTasks);
     saveTasks(updatedTasks);
     setEditIndex(null);
     setTaskTitle('');
     setTaskSummary('');
+    setOpened(false); // Close modal after saving
+    setTitleError(false); // Reset the error state
   }, [tasks, taskTitle, taskSummary, editIndex]);
 
   const deleteTask = useCallback(
@@ -53,19 +65,28 @@ export default function App() {
     [tasks]
   );
 
-  const editTask = useCallback((index) => {
-    setEditIndex(index);
-    const task = tasks[index];
-    setTaskTitle(task.title);
-    setTaskSummary(task.summary);
-    setOpened(true);
-  }, [tasks]);
+  const editTask = useCallback(
+    (index) => {
+      setEditIndex(index);
+      const task = tasks[index];
+      setTaskTitle(task.title);
+      setTaskSummary(task.summary);
+      setOpened(true);
+      setTitleError(false); // Reset the error state
+    },
+    [tasks]
+  );
 
-  const markAsCompleted = useCallback((index) => {
-    const updatedTasks = tasks.map((task, i) => i === index ? { ...task, completed: true } : task);
-    setTasks(updatedTasks);
-    saveTasks(updatedTasks);
-  }, [tasks]);
+  const markAsCompleted = useCallback(
+    (index) => {
+      const updatedTasks = tasks.map((task, i) =>
+        i === index ? { ...task, completed: true } : task
+      );
+      setTasks(updatedTasks);
+      saveTasks(updatedTasks);
+    },
+    [tasks]
+  );
 
   const loadTasks = useCallback(() => {
     const loadedTasks = JSON.parse(localStorage.getItem('tasks'));
@@ -82,27 +103,46 @@ export default function App() {
     loadTasks();
   }, [loadTasks]);
 
+  // Reset form values when the modal is opened for a new task
+  const handleOpenNewTaskModal = useCallback(() => {
+    setTaskTitle('');
+    setTaskSummary('');
+    setEditIndex(null);
+    setOpened(true);
+    setTitleError(false); // Reset the error state
+  }, []);
+
   return (
-    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-      <MantineProvider theme={{ colorScheme, defaultRadius: 'md' }} withGlobalStyles withNormalizeCSS>
-        <div
-          className="App"
-         
-        >
+    <ColorSchemeProvider
+      colorScheme={colorScheme}
+      toggleColorScheme={toggleColorScheme}
+    >
+      <MantineProvider
+        theme={{ colorScheme, defaultRadius: 'md' }}
+        withGlobalStyles
+        withNormalizeCSS
+      >
+        <div className="App">
           <Modal
             opened={opened}
             size="md"
-            title={editIndex === null ? "New Task" : "Edit Task"}
+            title={editIndex === null ? 'New Task' : 'Edit Task'}
             onClose={() => setOpened(false)}
             centered
           >
             <TextInput
               mt="md"
               value={taskTitle}
-              onChange={(event) => setTaskTitle(event.currentTarget.value)}
+              onChange={(event) => {
+                setTaskTitle(event.currentTarget.value);
+                if (titleError) {
+                  setTitleError(false); // Clear error on user input
+                }
+              }}
               placeholder="Task Title"
               required
               label="Title"
+              error={titleError && 'Task title is required'}
             />
             <TextInput
               mt="md"
@@ -115,13 +155,8 @@ export default function App() {
               <Button onClick={() => setOpened(false)} variant="subtle">
                 Cancel
               </Button>
-              <Button
-                onClick={() => {
-                  createTask();
-                  setOpened(false);
-                }}
-              >
-                {editIndex === null ? "Create Task" : "Save Changes"}
+              <Button onClick={createTask}>
+                {editIndex === null ? 'Create Task' : 'Save Changes'}
               </Button>
             </Group>
           </Modal>
@@ -143,15 +178,28 @@ export default function App() {
               >
                 My Tasks
               </Title>
-              <ActionIcon color="blue" onClick={() => toggleColorScheme()} size="lg">
-                {colorScheme === 'dark' ? <Sun size={16} /> : <MoonStars size={16} />}
+              <ActionIcon
+                color="blue"
+                onClick={() => toggleColorScheme()}
+                size="lg"
+              >
+                {colorScheme === 'dark' ? (
+                  <Sun size={16} />
+                ) : (
+                  <MoonStars size={16} />
+                )}
               </ActionIcon>
             </Group>
             {tasks.length > 0 ? (
               tasks.map((task, index) => (
                 <Card withBorder key={index} mt="sm" style={{ width: '100%' }}>
                   <Group position="apart">
-                    <Text weight="bold" style={{ textDecoration: task.completed ? 'line-through' : 'none' }}>
+                    <Text
+                      weight="bold"
+                      style={{
+                        textDecoration: task.completed ? 'line-through' : 'none',
+                      }}
+                    >
                       {task.title}
                     </Text>
                     <Group>
@@ -180,7 +228,14 @@ export default function App() {
                       )}
                     </Group>
                   </Group>
-                  <Text color="dimmed" size="md" mt="sm" style={{ textDecoration: task.completed ? 'line-through' : 'none' }}>
+                  <Text
+                    color="dimmed"
+                    size="md"
+                    mt="sm"
+                    style={{
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                    }}
+                  >
                     {task.summary || 'No summary was provided for this task'}
                   </Text>
                 </Card>
@@ -190,7 +245,7 @@ export default function App() {
                 You have no tasks
               </Text>
             )}
-            <Button onClick={() => setOpened(true)} fullWidth mt="md">
+            <Button onClick={handleOpenNewTaskModal} fullWidth mt="md">
               New Task
             </Button>
           </Container>
